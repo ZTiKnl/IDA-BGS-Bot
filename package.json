@@ -1,0 +1,26 @@
+{
+  "name": "ida-bgs-discbot",
+  "version": "0.0.1",
+  "description": " Discord Bot for sending warnings/reports/objectives from IDA-BGS system",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZTiKnl/IDA-BGS-DiscBot.git"
+  },
+  "keywords": [
+    "Discord",
+    "Bot"
+  ],
+  "author": "ZTiKnl",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ZTiKnl/IDA-BGS-DiscBot/issues"
+  },
+  "homepage": "https://github.com/ZTiKnl/IDA-BGS-DiscBot#readme",
+  "dependencies": {
+    "discord.js": "^11.5.1"
+  }
+}
