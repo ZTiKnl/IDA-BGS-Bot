@@ -1,7 +1,7 @@
 // program keepalive
 setInterval(() => {}, 1 << 30);
 
-const name = 'IDA-BGS-DiscBot';
+const name = 'IDA-BGS-Bot';
 
 const db = require('../private/db.inc.js');
 let val = db.connect();
@@ -13,7 +13,7 @@ const Discord = require('discord.js');
 const client = new Discord.Client();
 
 client.once('ready', () => {
-  console.log(name + ' IDA-BGS-DiscBot connected!');
+  console.log(name + ' connected!');
 });
 
 
