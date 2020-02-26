@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/ZTiKnl/IDA-BGS-DiscBot#readme",
   "dependencies": {
-    "discord.js": "^11.5.1"
+    "discord.js": "^11.5.1",
+    "request": "^2.88.2"
   }
 }
