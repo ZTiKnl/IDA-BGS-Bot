@@ -138,11 +138,7 @@ client.on('message', message => {
       message.channel.send('<security report>');
     }
     if (msg[1] === 'report') {
-//      if (message.author.id == '167129642451468288') {
-//        report('embed', message);
-//      } else {
-        report('reply', message);
-//      }
+      report('reply', message);
     }
     if (msg[1] === 'objectives') {
       message.channel.send('<objectives overview>');
@@ -255,7 +251,6 @@ function report(type, message='') {
       message.channel.send(reportmessage);
     } else {
       client.channels.get(factionmissionschannelid).send( reportmessage );
-//      client.channels.get(testchannelid).send( reportmessage );
     }
   });
 }
@@ -286,7 +281,6 @@ function gettick() {
           tickdata = tickdata + '```Tick:   ' + body['newtick'] + '\n';
           tickdata = tickdata + 'Tick ID: ' + body['newtickid'] + '```\n';
           message.channel.send(tickdata);
-
         }
       }
     }
