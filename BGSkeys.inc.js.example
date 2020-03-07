@@ -1,0 +1,22 @@
+module.exports = {
+  token: function() {
+    return '12345token54321';
+  },
+  testchannelid: function() {
+    return '12345'; // IDA #testing
+  },
+  factionchatchannelid: function() {
+    return '23456'; // IDA #faction-chat
+  },
+  factionmissionschannelid: function() {
+    return '34567'; // IDA #faction-missions
+  },
+  privatetestchannelid: function() {
+    return '45678'; // test channel
+  },
+  apikey: function () {
+    let key = 'jfdbgksg845769845kjfdbngkfdj';
+    return key;
+  }
+}
+
