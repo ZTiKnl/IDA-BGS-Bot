@@ -9,7 +9,7 @@ const BGSkeys = require('../private/BGSkeys.inc.js');
 let disctoken = BGSkeys.token();
 let testchannelid = BGSkeys.testchannelid();
 let factionchatchannelid = BGSkeys.factionchatchannelid();
-let factionmissionschannelid = BGSkeys.factionmissionschannelid();
+let factiontickbgschannelid = BGSkeys.factiontickbgschannelid();
 let privatetestchannelid = BGSkeys.privatetestchannelid();
 
 let apikey = BGSkeys.apikey();
@@ -32,7 +32,6 @@ var dailyreportsent;
 var tickupdate = setInterval(function() {
   gettick();
 }, 60000);
-
 
 client.on('message', message => {
   var msg = message.content.split(' ');
@@ -62,16 +61,17 @@ client.on('message', message => {
             i++;
           }
 
+          var updatehumanreadable = humanreadabletime(result['updatetime']);
           if (result['uptodate'] === false) {
             if (notuptodatesystems != null) {
-              notuptodatesystems = notuptodatesystems + systemname + influence + result['updatetime'] + '\n';
+              notuptodatesystems = notuptodatesystems + systemname + influence + updatehumanreadable + '\n';
             } else {
               notuptodatesystems = systemname + influence + result['updatetime'] + '\n';
             }
           }
         });
         if (notuptodatesystems != null) {
-          embed = embed + '`OUT OF DATE systems`\n```Name:                         Influence:     Last update:\n' + notuptodatesystems + '```\n\n';
+          embed = embed + '```diff\n-OUT OF DATE systems``````Name:                         Influence:     Last update:\n' + notuptodatesystems + '```\n\n';
         }
         var uptodatesystems;
         body.forEach(result => {
@@ -90,16 +90,17 @@ client.on('message', message => {
             i++;
           }
 
+          var updatehumanreadable = humanreadabletime(result['updatetime']);
           if (result['uptodate'] === true) {
             if (uptodatesystems != null) {
-              uptodatesystems = uptodatesystems + systemname + influence + result['updatetime'] + '\n';
+              uptodatesystems = uptodatesystems + systemname + influence + updatehumanreadable + '\n';
             } else {
-              uptodatesystems = systemname + influence + result['updatetime'] + '\n';
+              uptodatesystems = systemname + influence + updatehumanreadable + '\n';
             }
           }
         });
         if (uptodatesystems != null) {
-          embed = embed + '`Up to date systems`\n```Name:                         Influence:     Last update:\n' + uptodatesystems + '```\n\n';
+          embed = embed + '```ml\n"Up to date systems"``````Name:                         Influence:     Last update:\n' + uptodatesystems + '```\n\n';
         }
 
         message.channel.send(embed);
@@ -119,20 +120,63 @@ client.on('message', message => {
         if(message.member.roles.find(role => role.name === "Council") || message.member.roles.find(role => role.name === "Captain") || message.author.id == '167129642451468288'){
           if (!sendtickupdatemsg) {
             sendtickupdatemsg = true;
-            message.channel.send('Tick updates activated');
+            message.channel.send('```md\n#Tick updates activated```');
           } else {
             sendtickupdatemsg = false;
-            message.channel.send('Tick updates deactivated');
+            message.channel.send('```md\n#Tick updates deactivated```');
           }
         } else {
-            message.channel.send('You do not have the authority to use this command');
+            message.channel.send('```diff\n-You do not have the authority to use this command```');
         }
       } else {
-            message.channel.send('You can not use this command in a private message');
+            message.channel.send('```diff\n-You can not use this command in a private message```');
       }
     }
     if (msg[1] === 'influence') {
-      message.channel.send('<influence overview>');
+      request(requesturl + 'request=influence', { json: true }, (err, res, body) => {
+        if (err) { return console.log(err); }
+
+        var influencecount = body.length;
+        var influencecounter = 0;
+        var influencemessage = '';
+        if (influencecount < 1) {
+          influencemessage = '```No data```';
+        } else {
+          influencemessage = influencemessage + '```System                         Faction:                                 INF Rewards:              Trend:\n';
+          while (influencecounter < influencecount) {
+            var timestamp  = body[influencecounter]['timestamp'];
+            var systemname = body[influencecounter]['systemname'];
+            var amountaddunderscores = (30 - systemname.length);
+            var i = 0;
+            while (i < amountaddunderscores) {
+              systemname = systemname + ' ';
+              i++;
+            }
+
+            var factionname = body[influencecounter]['factionname'];
+            var amountaddunderscores = (40 - factionname.length);
+            var i = 0;
+            while (i < amountaddunderscores) {
+              factionname = factionname + ' ';
+              i++;
+            }
+
+            var influence = body[influencecounter]['influence'] + '+';
+            var amountaddunderscores = (25 - influence.toString().length);
+            var i = 0;
+            while (i < amountaddunderscores) {
+              influence = influence + ' ';
+              i++;
+            }
+            var direction = body[influencecounter]['direction'];
+
+            influencemessage = influencemessage + systemname + ' ' + factionname + ' ' + influence + ' ' + direction + '\n';
+            influencecounter++;
+          }
+          influencemessage = influencemessage + '```';
+          message.channel.send( influencemessage);
+        }
+      });
     }
     if (msg[1] === 'security') {
       message.channel.send('<security report>');
@@ -155,12 +199,12 @@ client.on('message', message => {
         if (apikeynew === true) {
           message.author.send('Here is the API key you requested:\n**' + apikey.toString() + '**')
           if (message.channel.type != 'dm') {
-            message.channel.send('A new API key has been sent to you in a private message');
+            message.channel.send('```md\n#A new API key has been sent to you in a private message```');
           }
         } else {
           message.author.send('You already have an API key:\n**' + apikey.toString() + '**')
           if (message.channel.type != 'dm') {
-            message.channel.send('Your API key has been sent to you in a private message');
+            message.channel.send('```md\n#Your API key has been sent to you in a private message```');
           }
         }
       });
@@ -173,9 +217,9 @@ client.on('message', message => {
       .addField('help', 'Displays this help text\n`!bgs help`', false)
       .addField('apikey', 'Request a new API key, or resend old key (for use in EDMC plugins)\n`!bgs apikey`', false)
       .addField('tick', 'Displays information about the latest tick\n`!bgs tick`', false)
-      .addField('tickupdate', 'Enable/Disable #faction-missions message on tick detection\n`!bgs tickupdate`', false)
+      .addField('tickupdate', 'Enable/Disable #faction-tick-bgs message on tick detection\n`!bgs tickupdate`', false)
       .addField('systems', 'Request a new API key, or resend old key\n`!bgs systems`', false)
-      .addField('influence', 'Displays stuff about INF%\n`!bgs influence` *(under construction)*', false)
+      .addField('influence', 'Displays a list of INF rewards from missions\n`!bgs influence`', false)
       .addField('security', 'Displays an overview of system security levels\n`!bgs security` *(under construction)*', false)
       .addField('report', 'Displays list of systems with warnings/notices (for example War or INF drop)\n`!bgs report`', false)
       .addField('objectives', 'Displays all objectives and their status\n`!bgs objectives` *(under construction)*', false);
@@ -196,53 +240,88 @@ function report(type, message='') {
     var i = 0;
     var reportmessage = '';
     while (i < reports) {
-      if (body[i]['type'] == 'overview') {
+      if (body[i]['reporttype'] == 'overview') {
         if (body[i]['systemuptodatecount'] == body[i]['systemcount'] && body[i]['systemcount'] > 0) {
-          reportmessage = reportmessage + '```All systems are up to date: ' + body[i]['systemuptodatecount'] + '/' + body[i]['systemcount']  + '```\n';
+          reportmessage = reportmessage + '```ml\n"All systems are up to date: ' + body[i]['systemuptodatecount'] + '/' + body[i]['systemcount']  + '"```\n';
         } else if(body[i]['systemuptodatecount'] < 1 && body[i]['systemcount'] > 0) {
-          reportmessage = reportmessage + '```ALL SYSTEMS ARE OUT OF DATE: ' + body[i]['systemuptodatecount'] + '/' + body[i]['systemcount']  + '```\n';
+          reportmessage = reportmessage + '```diff\n-ALL SYSTEMS ARE OUT OF DATE: ' + body[i]['systemuptodatecount'] + '/' + body[i]['systemcount']  + '```\n';
         } else {
-          reportmessage = reportmessage + '```Up to date systems: ' + body[i]['systemuptodatecount'] + '/' + body[i]['systemcount']  + '\nType !bgs \'systems\' for details' +  '```\n';
+          reportmessage = reportmessage + '```md\n#Up to date systems: ' + body[i]['systemuptodatecount'] + '/' + body[i]['systemcount']  + '\nType !bgs \'systems\' for details' +  '```\n';
         }
-      } else {
+      } else if (body[i]['reporttype'] == 'expansion') {
+        if (body[i]['status'] == 'Active') {
+          reportmessage = reportmessage + '```ml\n"We are experiencing Expansion"```\n';
+        }
+        if (body[i]['status'] == 'Pending') {
+          reportmessage = reportmessage + '```ml\n"We are pending Expansion (trend: ' + body[i]['direction'] + ')"```\n';
+        }
+        if (body[i]['status'] == 'Recovering') {
+          reportmessage = reportmessage + '```ml\n"We are recovering from Expansion (trend: ' + body[i]['direction']  + ')"```\n';
+        }
+      } else if (body[i]['reporttype'] == 'influence') {
         var updatetext;
         if (body[i]['uptodate'] === true) {
           updatetext = 'Up to date, '
         } else {
           updatetext = 'OUT OF DATE, '
         }
-
-        if (body[i]['type'] == 'influenceraise' || body[i]['type'] == 'influencedrop') {
-          if (body[i]['type'] == 'influenceraise') {
-            var incdec = 'increase';
-          } else if (body[i]['type'] == 'influencedrop') {
-            var incdec = 'decrease';
-          } else {
-            var incdec = 'stable';
-          }
-
-          reportmessage = reportmessage + '```' + body[i]['systemname'] + ' ' + body[i]['amount'] +  '% influence ' + incdec + ' (' + body[i]['total'] + '%)\n' + updatetext + 'last update: ' + body[i]['updatetime']  + '```\n';
-
+        var updatehumanreadable = humanreadabletime(body[i]['updatetime']);
+        if (body[i]['type'] == 'influenceraise') {
+          var incdec = 'increase';
+        } else if (body[i]['type'] == 'influencedrop') {
+          var incdec = 'decrease';
         } else {
-          var updatetext;
-          if (body[i]['uptodate'] === true) {
-            updatetext = 'Up to date, '
-          } else {
-            updatetext = '**OUT OF DATE**, '
-          }
-          if (body[i]['status'] === '') {
-            statustext = 'concluded';
-          } else if (body[i]['status'] === 'Active') {
-            statustext = 'ongoing';
-          } else if (body[i]['status'] === 'Pending') {
-            statustext = 'pending';
-          }
+          var incdec = 'stable';
+        }
+        if (body[i]['type'] == 'influencedrop') {
+          reportmessage = reportmessage + '```diff\n-' + body[i]['systemname'] + ' ' + body[i]['amount'] +  '% influence ' + incdec + ' (' + body[i]['total'] + '%)\n' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
+        } else {
+          reportmessage = reportmessage + '```ml\n"' + body[i]['systemname'] + ' ' + body[i]['amount'] +  '% influence ' + incdec + ' (' + body[i]['total'] + '%)"\n' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
+        }
 
-          reportmessage = reportmessage + '```' + body[i]['systemname'] + ' ' + body[i]['type'] +  ' is ' + statustext + '\n' +
-          'Factions: ' + body[i]['conflictfaction1'] + ' vs ' + body[i]['conflictfaction2'] + '\n' +
-          'Stakes: ' + body[i]['conflictfaction1stake'] + ' - ' + body[i]['conflictfaction2stake'] + '\n' +
-          'Score: ' + body[i]['conflictfaction1score'] + ' - ' + body[i]['conflictfaction2score'] + '\n' +
-          updatetext + 'last update: ' + body[i]['updatetime']  + '```\n';
+      } else if (body[i]['reporttype'] == 'conflict') {
+        var updatetext;
+        if (body[i]['uptodate'] === true) {
+          updatetext = 'Up to date, '
+        } else {
+          updatetext = 'OUT OF DATE, '
+        }
+        var updatehumanreadable = humanreadabletime(body[i]['updatetime']);
+        if (body[i]['status'] === '') {
+          statustext = 'concluded';
+        } else if (body[i]['status'] === 'Active') {
+          statustext = 'ongoing';
+        } else if (body[i]['status'] === 'Pending') {
+          statustext = 'pending';
+        }
+
+        reportmessage = reportmessage + '```\n' + body[i]['systemname'] + ' ' + body[i]['type'] +  ' is ' + statustext + '\n' +
+        'Factions: ' + body[i]['conflictfaction1'] + ' vs ' + body[i]['conflictfaction2'] + '\n' +
+        'Stakes: ' + body[i]['conflictfaction1stake'] + ' - ' + body[i]['conflictfaction2stake'] + '\n' +
+        'Score: ' + body[i]['conflictfaction1score'] + ' - ' + body[i]['conflictfaction2score'] + '\n' +
+        updatetext + 'last update: ' + updatehumanreadable + '```\n';
+
+      } else if (body[i]['reporttype'] == 'state') {
+        var updatetext;
+        if (body[i]['uptodate'] === true) {
+          updatetext = 'Up to date, '
+        } else {
+          updatetext = 'OUT OF DATE, '
+        }
+        var updatehumanreadable = humanreadabletime(body[i]['updatetime']);
+
+        if (body[i]['status'] === 'Recovering') {
+          statustext = 'recovering';
+        } else if (body[i]['status'] === 'Active') {
+          statustext = 'ongoing';
+        } else if (body[i]['status'] === 'Pending') {
+          statustext = 'pending';
+        }
+
+        if (body[i]['status'] === 'Active') {
+          reportmessage = reportmessage + '```diff\n-' + body[i]['systemname'] + ' ' + body[i]['type'] +  ' ' + statustext + '\n' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
+        } else {
+          reportmessage = reportmessage + '```diff\n-' + body[i]['systemname'] + ' ' + body[i]['type'] +  ' ' + statustext + ' (trend: ' + body[i]['direction'] + ')\n' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
         }
       }
       i++;
@@ -250,7 +329,7 @@ function report(type, message='') {
     if (type == 'reply') {
       message.channel.send(reportmessage);
     } else {
-      client.channels.get(factionmissionschannelid).send( reportmessage );
+      client.channels.get(factiontickbgschannelid).send( reportmessage );
     }
   });
 }
@@ -269,18 +348,10 @@ function gettick() {
         allsystemsupdated = false;
 
         if (sendtickupdatemsg == true) {
-          var discordembed = new Discord.RichEmbed()
-          .setTitle('New tick detected')
-          .setColor('#7A2F8F')
-          .addField('Time', body['newtick'], false)
-          .addField('ID #', body['newtickid'], false);
-          client.channels.get(factionmissionschannelid).send( { embed: discordembed } );
-
-
           var tickdata = '\n**New tick detected**:\n';
           tickdata = tickdata + '```Tick:   ' + body['newtick'] + '\n';
           tickdata = tickdata + 'Tick ID: ' + body['newtickid'] + '```\n';
-          message.channel.send(tickdata);
+          client.channels.get(factiontickbgschannelid).send( tickdata );
         }
       }
     }
@@ -301,4 +372,77 @@ function gettick() {
     report('timegenerated');
     dailyreportsent = true;
   }
+}
+
+
+function humanreadabletime(timestamp) {
+  var servertime = new Date(new Date().toUTCString());
+  const time = new Date(timestamp + 'Z');
+  const diffTime = Math.abs((servertime - time) / 1000);
+
+  var years = Math.floor(
+    diffTime /
+    (365 * 60 * 60 * 24)
+  );
+
+  var months = Math.floor(
+    (diffTime - years * 365*60*60*24)
+    / (30*60*60*24)
+  );
+
+  var days = Math.floor(
+    (diffTime - years * 365*60*60*24 - months * 30*60*60*24)
+    / (60*60*24)
+  );
+
+  var hours = Math.floor(
+    (diffTime - years * 365 * 60 * 60 * 24 - months * 30 * 60 * 60 * 24 - days * 60 * 60 * 24)
+    /
+    (60 * 60)
+  );
+
+  var minutes = Math.floor(
+    (diffTime - years * 365 * 60 * 60 * 24 - months * 30 * 60 * 60 * 24 - days * 60 * 60 * 24 - hours * 60 * 60)
+    / 60
+  );
+
+  var result = '';
+  if (years > 0) {
+    if (result != '') {
+      result = result + ', ';
+    }
+    result = result + years + "Y";
+  }
+  if (months > 0) {
+    if (result != '') {
+      result = result + ', ';
+    }
+    result = result + months + "M";
+  }
+  if (days > 0) {
+    if (result != '') {
+      result = result + ', ';
+    }
+    result = result + days + "d";
+  }
+  if (hours > 0) {
+    if (result != '') {
+      result = result + ', ';
+    }
+    result = result + hours + "h";
+  }
+  if (minutes > 0) {
+    if (result != '') {
+      result = result + ', ';
+    }
+    result = result + minutes + "m";
+  }
+  if (result == '') {
+    if (diffTime < 60) {
+      result = '< 1m';
+    }
+  }
+
+  // Print the result
+  return result;
 }
