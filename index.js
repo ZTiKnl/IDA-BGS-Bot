@@ -66,7 +66,7 @@ client.on('message', message => {
             if (notuptodatesystems != null) {
               notuptodatesystems = notuptodatesystems + systemname + influence + updatehumanreadable + '\n';
             } else {
-              notuptodatesystems = systemname + influence + result['updatetime'] + '\n';
+              notuptodatesystems = systemname + influence + updatehumanreadable + '\n';
             }
           }
         });
@@ -133,7 +133,8 @@ client.on('message', message => {
       }
     }
     if (msg[1] === 'influence') {
-      request(requesturl + 'request=influence', { json: true }, (err, res, body) => {
+      var requesturl2 = requesturl + 'request=influence';
+      request(requesturl2, { json: true }, (err, res, body) => {
         if (err) { return console.log(err); }
 
         var influencecount = body.length;
@@ -142,7 +143,14 @@ client.on('message', message => {
         if (influencecount < 1) {
           influencemessage = '```No data```';
         } else {
-          influencemessage = influencemessage + '```System                         Faction:                                 INF Rewards:              Trend:\n';
+
+          influencemessage = influencemessage + '**IDA INF earnings**';
+
+          if (influencecount > 0) {
+            influencemessage = influencemessage + '```System                         Faction:                                 INF Rewards:              Trend:\n';
+          } else {
+            influencemessage = influencemessage + '```No data';
+          }
           while (influencecounter < influencecount) {
             var timestamp  = body[influencecounter]['timestamp'];
             var systemname = body[influencecounter]['systemname'];
@@ -169,12 +177,69 @@ client.on('message', message => {
               i++;
             }
             var direction = body[influencecounter]['direction'];
-
             influencemessage = influencemessage + systemname + ' ' + factionname + ' ' + influence + ' ' + direction + '\n';
             influencecounter++;
           }
           influencemessage = influencemessage + '```';
-          message.channel.send( influencemessage);
+          message.channel.send( influencemessage );
+        }
+      });
+    }
+    if (msg[1] === 'myinfluence') {
+      var userid = message.author['id'];
+      var requesturl2 = requesturl + 'request=myinfluence&userid=' + userid;
+
+      request(requesturl2, { json: true }, (err, res, body) => {
+        if (err) { return console.log(err); }
+
+        var influencecount = body.length;
+        var influencecounter = 0;
+        var influencemessage = '';
+        if (influencecount < 1) {
+          influencemessage = '```No data```';
+        } else {
+
+          influencemessage = influencemessage + '**Personal INF earnings**';
+
+          if (influencecount > 0) {
+            influencemessage = influencemessage + '```System                         Faction:                                 INF Rewards:\n';
+          } else {
+            influencemessage = influencemessage + '```No data';
+          }
+          while (influencecounter < influencecount) {
+            var timestamp  = body[influencecounter]['timestamp'];
+            var systemname = body[influencecounter]['systemname'];
+            var amountaddunderscores = (30 - systemname.length);
+            var i = 0;
+            while (i < amountaddunderscores) {
+              systemname = systemname + ' ';
+              i++;
+            }
+
+            var factionname = body[influencecounter]['factionname'];
+            var amountaddunderscores = (40 - factionname.length);
+            var i = 0;
+            while (i < amountaddunderscores) {
+              factionname = factionname + ' ';
+              i++;
+            }
+
+            var influence = body[influencecounter]['influence'] + '+';
+            var amountaddunderscores = (25 - influence.toString().length);
+            var i = 0;
+            while (i < amountaddunderscores) {
+              influence = influence + ' ';
+              i++;
+            }
+            var direction = '';
+            influencemessage = influencemessage + systemname + ' ' + factionname + ' ' + influence + direction + '\n';
+            influencecounter++;
+          }
+          influencemessage = influencemessage + '```';
+
+          message.channel.send( 'Check your PMs' );
+
+          message.author.send( influencemessage );
         }
       });
     }
@@ -219,7 +284,8 @@ client.on('message', message => {
       .addField('tick', 'Displays information about the latest tick\n`!bgs tick`', false)
       .addField('tickupdate', 'Enable/Disable #faction-tick-bgs message on tick detection\n`!bgs tickupdate`', false)
       .addField('systems', 'Request a new API key, or resend old key\n`!bgs systems`', false)
-      .addField('influence', 'Displays a list of INF rewards from missions\n`!bgs influence`', false)
+      .addField('influence', 'Displays a list of IDA INF rewards from missions\n`!bgs influence`', false)
+      .addField('myinfluence', 'Displays a list of personal INF rewards from missions\n`!bgs myinfluence`', false)
       .addField('security', 'Displays an overview of system security levels\n`!bgs security` *(under construction)*', false)
       .addField('report', 'Displays list of systems with warnings/notices (for example War or INF drop)\n`!bgs report`', false)
       .addField('objectives', 'Displays all objectives and their status\n`!bgs objectives` *(under construction)*', false);
@@ -274,17 +340,32 @@ function report(type, message='') {
           var incdec = 'stable';
         }
         if (body[i]['type'] == 'influencedrop') {
-          reportmessage = reportmessage + '```diff\n-' + body[i]['systemname'] + ' ' + body[i]['amount'] +  '% influence ' + incdec + ' (' + body[i]['total'] + '%)\n' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
+          reportmessage = reportmessage + '```diff\n-' + body[i]['systemname'] + ' ' + body[i]['amount'] + '% influence ' + incdec + ' (' + body[i]['total'] + '%)``````' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
         } else {
-          reportmessage = reportmessage + '```ml\n"' + body[i]['systemname'] + ' ' + body[i]['amount'] +  '% influence ' + incdec + ' (' + body[i]['total'] + '%)"\n' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
+          reportmessage = reportmessage + '```ml\n"' + body[i]['systemname'] + ' ' + body[i]['amount'] +  '% influence ' + incdec + ' (' + body[i]['total'] + '%)"``````' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
         }
+      } else if (body[i]['reporttype'] == 'influenceproximity') {
+        var updatetext;
+        if (body[i]['uptodate'] === true) {
+          updatetext = 'Up to date, ';
+        } else {
+          updatetext = 'OUT OF DATE, ';
+        }
+        var updatehumanreadable = humanreadabletime(body[i]['timestamp']);
+
+        if (body[i]['factionproximity'] < 1) {
+          var opening = '```diff\n-';
+        } else {
+          var opening = '```md\n#';
+        }
+        reportmessage = reportmessage + opening + 'Influence proximity warning: ' + body[i]['factionsystem'] + ' (' + body[i]['factionproximity'] + '%)' + '``````' + body[i]['factionname'] + ': ' + body[i]['factioninfluence'] + '%                    ' + body[i]['faction2name'] + ': ' + body[i]['faction2influence'] + '%```\n';
 
       } else if (body[i]['reporttype'] == 'conflict') {
         var updatetext;
         if (body[i]['uptodate'] === true) {
-          updatetext = 'Up to date, '
+          updatetext = 'Up to date, ';
         } else {
-          updatetext = 'OUT OF DATE, '
+          updatetext = 'OUT OF DATE, ';
         }
         var updatehumanreadable = humanreadabletime(body[i]['updatetime']);
         if (body[i]['status'] === '') {
@@ -295,7 +376,19 @@ function report(type, message='') {
           statustext = 'pending';
         }
 
-        reportmessage = reportmessage + '```\n' + body[i]['systemname'] + ' ' + body[i]['type'] +  ' is ' + statustext + '\n' +
+        if (body[i]['direction'] == 'up') {
+          var opening = '```ml\n"';
+          var closing = '"';
+        }
+        if (body[i]['direction'] == 'draw') {
+          var opening = '```md\n#';
+          var closing = '';
+        }
+        if (body[i]['direction'] == 'down') {
+          var opening = '```diff\n-';
+          var closing = '';
+        }
+        reportmessage = reportmessage + opening + body[i]['systemname'] + ' ' + body[i]['type'] +  ' is ' + statustext + closing + '``````' +
         'Factions: ' + body[i]['conflictfaction1'] + ' vs ' + body[i]['conflictfaction2'] + '\n' +
         'Stakes: ' + body[i]['conflictfaction1stake'] + ' - ' + body[i]['conflictfaction2stake'] + '\n' +
         'Score: ' + body[i]['conflictfaction1score'] + ' - ' + body[i]['conflictfaction2score'] + '\n' +
@@ -304,9 +397,9 @@ function report(type, message='') {
       } else if (body[i]['reporttype'] == 'state') {
         var updatetext;
         if (body[i]['uptodate'] === true) {
-          updatetext = 'Up to date, '
+          updatetext = 'Up to date, ';
         } else {
-          updatetext = 'OUT OF DATE, '
+          updatetext = 'OUT OF DATE, ';
         }
         var updatehumanreadable = humanreadabletime(body[i]['updatetime']);
 
@@ -319,9 +412,9 @@ function report(type, message='') {
         }
 
         if (body[i]['status'] === 'Active') {
-          reportmessage = reportmessage + '```diff\n-' + body[i]['systemname'] + ' ' + body[i]['type'] +  ' ' + statustext + '\n' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
+          reportmessage = reportmessage + '```diff\n-' + body[i]['systemname'] + ' ' + body[i]['type'] +  ' ' + statustext + '``````' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
         } else {
-          reportmessage = reportmessage + '```diff\n-' + body[i]['systemname'] + ' ' + body[i]['type'] +  ' ' + statustext + ' (trend: ' + body[i]['direction'] + ')\n' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
+          reportmessage = reportmessage + '```diff\n-' + body[i]['systemname'] + ' ' + body[i]['type'] +  ' ' + statustext + ' (trend: ' + body[i]['direction'] + ')``````' + updatetext + 'last update: ' + updatehumanreadable  + '```\n';
         }
       }
       i++;
